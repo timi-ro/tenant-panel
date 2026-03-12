@@ -1,0 +1,22 @@
+# Build output
+tenant-panel
+*.exe
+
+# Environment — never commit secrets
+.env
+
+# SQLite database
+*.db
+*.db-shm
+*.db-wal
+
+# Go
+vendor/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp

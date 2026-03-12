@@ -1,0 +1,43 @@
+services:
+  rag-admin-panel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rag-admin-panel:latest
+    container_name: tenant-panel
+    restart: unless-stopped
+    ports:
+      - "9005:9005"
+    volumes:
+      - panel_data:/data
+    environment:
+      # URL of the RAG API service (change to match your setup).
+      RAG_API_URL: ${RAG_API_URL:-http://rag-api:8000}
+      # Secret forwarded to the RAG API as X-Admin-Secret.
+      ADMIN_SECRET: ${ADMIN_SECRET:-}
+      # Password for the admin panel login page.
+      PANEL_SECRET: ${PANEL_SECRET:-changeme}
+      # Port the panel listens on (inside the container).
+      PORT: "9005"
+      # SQLite database path (inside the container, mounted from the volume).
+      DB_PATH: /data/rag-panel.db
+      GIN_MODE: release
+    networks:
+      - rag_net
+
+  # Uncomment and adjust if you want to run the RAG API alongside the panel.
+  # rag-api:
+  #   image: your-rag-api-image:latest
+  #   container_name: rag-api
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8000:8000"
+  #   networks:
+  #     - rag_net
+
+volumes:
+  panel_data:
+
+networks:
+  rag_net:
+    driver: bridge
