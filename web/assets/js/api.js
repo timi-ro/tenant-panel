@@ -42,6 +42,9 @@
     createSite(name, plan) {
       return http.post('/sites', { name, plan }).then(r => r.obj);
     },
+    getSite(id) {
+      return http.get(`/sites/${id}`).then(r => r.obj);
+    },
     updatePlan(id, plan) {
       return http.post(`/sites/${id}/plan`, { plan }).then(r => r.obj);
     },

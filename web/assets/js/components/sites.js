@@ -49,6 +49,8 @@
             :loading="loading"
             row-key="id"
             size="small"
+            style="width:100%"
+            :scroll="{ x: true }"
             :pagination="{ pageSize: 15, showSizeChanger: true, showTotal: t => 'Total ' + t }"
           >
             <!-- Enabled toggle -->
@@ -82,7 +84,25 @@
 
             <!-- Actions -->
             <template #actions="text, record">
-              <div style="display:flex;gap:4px;align-items:center;">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <!-- Reactivate button (only when inactive) -->
+                <a-button
+                  v-if="!record.is_active"
+                  size="small"
+                  type="primary"
+                  ghost
+                  icon="sync"
+                  :loading="!!actionLoading[record.id]"
+                  @click="toggleActive(record, true)"
+                >Reactivate</a-button>
+
+                <!-- Show / Hide API Key -->
+                <a-button
+                  size="small"
+                  :icon="keyModal.siteId === record.id && keyModal.visible ? 'eye-invisible' : 'key'"
+                  @click="toggleApiKey(record)"
+                >{{ keyModal.siteId === record.id && keyModal.visible ? 'Hide Key' : 'API Key' }}</a-button>
+
                 <!-- Plan selector -->
                 <a-select
                   :value="record.plan"
@@ -99,6 +119,23 @@
             </template>
           </a-table>
         </div>
+
+        <!-- API Key Modal -->
+        <a-modal
+          v-model="keyModal.visible"
+          :title="'API Key — ' + keyModal.siteName"
+          :footer="null"
+          width="520px"
+          @cancel="keyModal.visible = false"
+        >
+          <a-spin :spinning="keyModal.loading">
+            <div v-if="keyModal.apiKey" style="display:flex;align-items:center;gap:8px;">
+              <code style="flex:1;background:#f5f5f5;border:1px solid #d9d9d9;border-radius:4px;padding:8px 12px;font-size:13px;word-break:break-all;display:block;">{{ keyModal.apiKey }}</code>
+              <a-button icon="copy" @click="copyKey(keyModal.apiKey)">Copy</a-button>
+            </div>
+            <div v-else-if="!keyModal.loading" style="color:#8c8c8c;">No API key available.</div>
+          </a-spin>
+        </a-modal>
 
         <!-- Create Site Modal -->
         <a-modal
@@ -134,16 +171,17 @@
         creating: false,
         newApiKey: null,
         actionLoading: {},
+        keyModal: { visible: false, siteName: '', apiKey: '', loading: false, siteId: null },
         createForm: { name: '', plan: 'free' },
         columns: [
           { title: 'ID',       dataIndex: 'id',       key: 'id',      width: 55 },
           { title: 'Enabled',  key: 'enabled',        width: 75,      scopedSlots: { customRender: 'enabled' } },
-          { title: 'Name',     dataIndex: 'name',     key: 'name' },
-          { title: 'Plan',     dataIndex: 'plan',     key: 'plan',    scopedSlots: { customRender: 'plan' } },
-          { title: 'Requests', key: 'requests',       width: 130,     scopedSlots: { customRender: 'requests' } },
-          { title: 'Created',  dataIndex: 'created_at', key: 'created_at', width: 160,
+          { title: 'Name',     dataIndex: 'name',     key: 'name',    width: 180 },
+          { title: 'Plan',     dataIndex: 'plan',     key: 'plan',    width: 110, scopedSlots: { customRender: 'plan' } },
+          { title: 'Requests', key: 'requests',       width: 140,     scopedSlots: { customRender: 'requests' } },
+          { title: 'Created',  dataIndex: 'created_at', key: 'created_at', width: 110,
             customRender: t => t ? t.split('T')[0] : '—' },
-          { title: 'Plan',     key: 'actions',        width: 120,     scopedSlots: { customRender: 'actions' } },
+          { title: 'Actions',  key: 'actions',                        scopedSlots: { customRender: 'actions' } },
         ],
       };
     },
@@ -218,6 +256,27 @@
       resetForm() {
         this.createForm = { name: '', plan: 'free' };
         this.createModalVisible = false;
+      },
+      async toggleApiKey(record) {
+        if (this.keyModal.visible && this.keyModal.siteId === record.id) {
+          this.keyModal.visible = false;
+          return;
+        }
+        this.keyModal = { visible: true, siteName: record.name, apiKey: '', loading: true, siteId: record.id };
+        try {
+          const site = await window.PanelAPI.getSite(record.id);
+          this.keyModal.apiKey = site.api_key || '';
+        } catch (e) {
+          this.$message.error('Failed to load API key: ' + e.message);
+          this.keyModal.visible = false;
+        } finally {
+          this.keyModal.loading = false;
+        }
+      },
+      copyKey(key) {
+        navigator.clipboard.writeText(key).then(() => {
+          this.$message.success('Copied to clipboard!');
+        });
       },
     },
     mounted() { this.fetchSites(); },

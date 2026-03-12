@@ -1,9 +1,9 @@
 services:
-  rag-admin-panel:
+  tenant-panel:
     build:
       context: .
       dockerfile: Dockerfile
-    image: rag-admin-panel:latest
+    image: tenant-panel:latest
     container_name: tenant-panel
     restart: unless-stopped
     ports:

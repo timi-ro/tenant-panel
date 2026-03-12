@@ -82,6 +82,7 @@ func Setup(
 
 		api.GET("/sites", controller.ListSites)
 		api.POST("/sites", controller.CreateSite)
+		api.GET("/sites/:id", controller.GetSite)
 		api.POST("/sites/:id/plan", controller.UpdatePlan)
 		api.POST("/sites/:id/deactivate", controller.DeactivateSite)
 		api.POST("/sites/:id/reactivate", controller.ReactivateSite)

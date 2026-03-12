@@ -156,6 +156,16 @@ func (c *RAGClient) CreateSite(name, plan string) (CreateSiteResp, error) {
 	return out, c.do(req, &out)
 }
 
+// GetSite calls GET /admin/sites/:id.
+func (c *RAGClient) GetSite(id int) (Site, error) {
+	req, err := c.newRequest(http.MethodGet, fmt.Sprintf("/admin/sites/%d", id), nil)
+	if err != nil {
+		return Site{}, err
+	}
+	var out Site
+	return out, c.do(req, &out)
+}
+
 // UpdatePlan calls PATCH /admin/sites/:id/plan.
 func (c *RAGClient) UpdatePlan(id int, plan string) error {
 	payload := map[string]string{"plan": plan}

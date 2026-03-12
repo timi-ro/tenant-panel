@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y ca-certificates libsqlite3-0 && rm -rf 
 
 WORKDIR /app
 
-COPY --from=builder /app/rag-admin-panel .
+COPY --from=builder /app/tenant-panel .
 
 # Data directory for SQLite database.
 RUN mkdir -p /data
@@ -36,4 +36,4 @@ EXPOSE 9005
 
 VOLUME ["/data"]
 
-ENTRYPOINT ["./rag-admin-panel"]
+ENTRYPOINT ["./tenant-panel"]

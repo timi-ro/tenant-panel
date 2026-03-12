@@ -49,6 +49,29 @@ func CreateSite(c *gin.Context) {
 	success(c, resp)
 }
 
+// GetSite proxies GET /panel/api/sites/:id → GET /admin/sites/:id.
+func GetSite(c *gin.Context) {
+	client := ragClient(c)
+	if client == nil {
+		fail(c, "rag client not available")
+		return
+	}
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		fail(c, "invalid site id")
+		return
+	}
+
+	site, err := client.GetSite(id)
+	if err != nil {
+		fail(c, err.Error())
+		return
+	}
+
+	success(c, site)
+}
+
 // UpdatePlan proxies POST /panel/api/sites/:id/plan → PATCH /admin/sites/:id/plan.
 func UpdatePlan(c *gin.Context) {
 	client := ragClient(c)
