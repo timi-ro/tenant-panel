@@ -82,10 +82,10 @@ func Setup(
 
 		api.GET("/sites", controller.ListSites)
 		api.POST("/sites", controller.CreateSite)
-		api.GET("/sites/:id", controller.GetSite)
 		api.POST("/sites/:id/plan", controller.UpdatePlan)
-		api.POST("/sites/:id/deactivate", controller.DeactivateSite)
-		api.POST("/sites/:id/reactivate", controller.ReactivateSite)
+		api.POST("/sites/:id/active", controller.SetActive)
+		api.POST("/sites/:id/reset", controller.ResetSite)
+		api.POST("/sites/:id/regenerate-key", controller.RegenerateKey)
 
 		api.GET("/queue", controller.GetQueue)
 		api.POST("/queue/:job_id/track", controller.TrackJob)

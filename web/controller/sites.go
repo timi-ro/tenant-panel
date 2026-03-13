@@ -49,29 +49,6 @@ func CreateSite(c *gin.Context) {
 	success(c, resp)
 }
 
-// GetSite proxies GET /panel/api/sites/:id → GET /admin/sites/:id.
-func GetSite(c *gin.Context) {
-	client := ragClient(c)
-	if client == nil {
-		fail(c, "rag client not available")
-		return
-	}
-
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		fail(c, "invalid site id")
-		return
-	}
-
-	site, err := client.GetSite(id)
-	if err != nil {
-		fail(c, err.Error())
-		return
-	}
-
-	success(c, site)
-}
-
 // UpdatePlan proxies POST /panel/api/sites/:id/plan → PATCH /admin/sites/:id/plan.
 func UpdatePlan(c *gin.Context) {
 	client := ragClient(c)
@@ -102,8 +79,9 @@ func UpdatePlan(c *gin.Context) {
 	success(c, gin.H{"updated": true})
 }
 
-// DeactivateSite proxies POST /panel/api/sites/:id/deactivate → PATCH /admin/sites/:id/deactivate.
-func DeactivateSite(c *gin.Context) {
+// SetActive proxies POST /panel/api/sites/:id/active → PATCH /admin/sites/:id { "is_active": ... }.
+// Body: { "is_active": true|false }
+func SetActive(c *gin.Context) {
 	client := ragClient(c)
 	if client == nil {
 		fail(c, "rag client not available")
@@ -116,16 +94,24 @@ func DeactivateSite(c *gin.Context) {
 		return
 	}
 
-	if err := client.DeactivateSite(id); err != nil {
+	var body struct {
+		IsActive bool `json:"is_active"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		fail(c, "is_active is required")
+		return
+	}
+
+	if err := client.SetActive(id, body.IsActive); err != nil {
 		fail(c, err.Error())
 		return
 	}
 
-	success(c, gin.H{"deactivated": true})
+	success(c, gin.H{"is_active": body.IsActive})
 }
 
-// ReactivateSite proxies POST /panel/api/sites/:id/reactivate → PATCH /admin/sites/:id/reactivate.
-func ReactivateSite(c *gin.Context) {
+// ResetSite proxies POST /panel/api/sites/:id/reset → POST /admin/sites/:id/reset.
+func ResetSite(c *gin.Context) {
 	client := ragClient(c)
 	if client == nil {
 		fail(c, "rag client not available")
@@ -138,10 +124,43 @@ func ReactivateSite(c *gin.Context) {
 		return
 	}
 
-	if err := client.ReactivateSite(id); err != nil {
+	var body struct {
+		Messages bool `json:"messages"`
+		Files    bool `json:"files"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		fail(c, "invalid request body")
+		return
+	}
+
+	resp, err := client.ResetSite(id, body.Messages, body.Files)
+	if err != nil {
 		fail(c, err.Error())
 		return
 	}
 
-	success(c, gin.H{"reactivated": true})
+	success(c, resp)
+}
+
+// RegenerateKey proxies POST /panel/api/sites/:id/regenerate-key → POST /admin/sites/:id/regenerate-key.
+func RegenerateKey(c *gin.Context) {
+	client := ragClient(c)
+	if client == nil {
+		fail(c, "rag client not available")
+		return
+	}
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		fail(c, "invalid site id")
+		return
+	}
+
+	resp, err := client.RegenerateKey(id)
+	if err != nil {
+		fail(c, err.Error())
+		return
+	}
+
+	success(c, resp)
 }

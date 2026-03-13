@@ -96,12 +96,21 @@
                   @click="toggleActive(record, true)"
                 >Reactivate</a-button>
 
-                <!-- Show / Hide API Key -->
+                <!-- Regenerate API Key -->
                 <a-button
                   size="small"
-                  :icon="keyModal.siteId === record.id && keyModal.visible ? 'eye-invisible' : 'key'"
+                  icon="key"
                   @click="toggleApiKey(record)"
-                >{{ keyModal.siteId === record.id && keyModal.visible ? 'Hide Key' : 'API Key' }}</a-button>
+                >Regen Key</a-button>
+
+                <!-- Reset -->
+                <a-button
+                  size="small"
+                  icon="delete"
+                  type="danger"
+                  ghost
+                  @click="openResetModal(record)"
+                >Reset</a-button>
 
                 <!-- Plan selector -->
                 <a-select
@@ -135,6 +144,27 @@
             </div>
             <div v-else-if="!keyModal.loading" style="color:#8c8c8c;">No API key available.</div>
           </a-spin>
+        </a-modal>
+
+        <!-- Reset Site Modal -->
+        <a-modal
+          v-model="resetModal.visible"
+          :title="'Reset — ' + resetModal.siteName"
+          ok-text="Reset"
+          ok-type="danger"
+          :confirm-loading="resetModal.loading"
+          @ok="submitReset"
+          @cancel="resetModal.visible = false"
+        >
+          <p style="color:#595959;margin-bottom:16px;">Select what to clear. This cannot be undone.</p>
+          <a-checkbox v-model="resetModal.messages" style="display:block;margin-bottom:10px;">
+            <span style="font-weight:500;">Message logs</span>
+            <span style="color:#8c8c8c;font-size:12px;margin-left:6px;">Resets message quota to zero</span>
+          </a-checkbox>
+          <a-checkbox v-model="resetModal.files" style="display:block;">
+            <span style="font-weight:500;">Vector chunks (files)</span>
+            <span style="color:#8c8c8c;font-size:12px;margin-left:6px;">Deletes all ingested documents</span>
+          </a-checkbox>
         </a-modal>
 
         <!-- Create Site Modal -->
@@ -172,6 +202,7 @@
         newApiKey: null,
         actionLoading: {},
         keyModal: { visible: false, siteName: '', apiKey: '', loading: false, siteId: null },
+        resetModal: { visible: false, siteName: '', siteId: null, messages: false, files: false, loading: false },
         createForm: { name: '', plan: 'free' },
         columns: [
           { title: 'ID',       dataIndex: 'id',       key: 'id',      width: 55 },
@@ -212,13 +243,8 @@
       async toggleActive(site, active) {
         this.$set(this.actionLoading, site.id, true);
         try {
-          if (active) {
-            await window.PanelAPI.reactivateSite(site.id);
-            this.$message.success(site.name + ' reactivated');
-          } else {
-            await window.PanelAPI.deactivateSite(site.id);
-            this.$message.success(site.name + ' deactivated');
-          }
+          await window.PanelAPI.setActive(site.id, active);
+          this.$message.success(site.name + (active ? ' reactivated' : ' deactivated'));
           await this.fetchSites();
         } catch (e) {
           this.$message.error(e.message);
@@ -257,26 +283,56 @@
         this.createForm = { name: '', plan: 'free' };
         this.createModalVisible = false;
       },
-      async toggleApiKey(record) {
+      toggleApiKey(record) {
         if (this.keyModal.visible && this.keyModal.siteId === record.id) {
           this.keyModal.visible = false;
           return;
         }
+        this.$confirm({
+          title: 'Regenerate API Key for ' + record.name + '?',
+          content: 'The current key will stop working immediately. Save the new key — it will only be shown once.',
+          okText: 'Regenerate',
+          okType: 'danger',
+          cancelText: 'Cancel',
+          onOk: () => this.doRegenerateKey(record),
+        });
+      },
+      async doRegenerateKey(record) {
         this.keyModal = { visible: true, siteName: record.name, apiKey: '', loading: true, siteId: record.id };
         try {
-          const site = await window.PanelAPI.getSite(record.id);
-          this.keyModal.apiKey = site.api_key || '';
-        } catch (e) {
-          this.$message.error('Failed to load API key: ' + e.message);
-          this.keyModal.visible = false;
-        } finally {
+          const resp = await window.PanelAPI.regenerateKey(record.id);
+          this.keyModal.apiKey = resp.api_key || '';
           this.keyModal.loading = false;
+        } catch (e) {
+          this.$message.error('Failed to regenerate key: ' + e.message);
+          this.keyModal.visible = false;
         }
       },
       copyKey(key) {
         navigator.clipboard.writeText(key).then(() => {
           this.$message.success('Copied to clipboard!');
         });
+      },
+      openResetModal(record) {
+        this.resetModal = { visible: true, siteName: record.name, siteId: record.id, messages: false, files: false, loading: false };
+      },
+      async submitReset() {
+        if (!this.resetModal.messages && !this.resetModal.files) {
+          this.$message.warning('Select at least one option to reset.');
+          return;
+        }
+        this.resetModal.loading = true;
+        try {
+          const resp = await window.PanelAPI.resetSite(this.resetModal.siteId, this.resetModal.messages, this.resetModal.files);
+          const cleared = (resp.cleared || []).join(', ') || 'nothing';
+          this.$message.success('Reset complete — cleared: ' + cleared);
+          this.resetModal.visible = false;
+          await this.fetchSites();
+        } catch (e) {
+          this.$message.error('Reset failed: ' + e.message);
+        } finally {
+          this.resetModal.loading = false;
+        }
       },
     },
     mounted() { this.fetchSites(); },

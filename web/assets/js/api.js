@@ -42,17 +42,17 @@
     createSite(name, plan) {
       return http.post('/sites', { name, plan }).then(r => r.obj);
     },
-    getSite(id) {
-      return http.get(`/sites/${id}`).then(r => r.obj);
-    },
     updatePlan(id, plan) {
       return http.post(`/sites/${id}/plan`, { plan }).then(r => r.obj);
     },
-    deactivateSite(id) {
-      return http.post(`/sites/${id}/deactivate`).then(r => r.obj);
+    setActive(id, isActive) {
+      return http.post(`/sites/${id}/active`, { is_active: isActive }).then(r => r.obj);
     },
-    reactivateSite(id) {
-      return http.post(`/sites/${id}/reactivate`).then(r => r.obj);
+    resetSite(id, messages, files) {
+      return http.post(`/sites/${id}/reset`, { messages, files }).then(r => r.obj);
+    },
+    regenerateKey(id) {
+      return http.post(`/sites/${id}/regenerate-key`).then(r => r.obj);
     },
 
     // Queue

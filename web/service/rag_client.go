@@ -156,42 +156,57 @@ func (c *RAGClient) CreateSite(name, plan string) (CreateSiteResp, error) {
 	return out, c.do(req, &out)
 }
 
-// GetSite calls GET /admin/sites/:id.
-func (c *RAGClient) GetSite(id int) (Site, error) {
-	req, err := c.newRequest(http.MethodGet, fmt.Sprintf("/admin/sites/%d", id), nil)
+// UpdatePlan calls PATCH /admin/sites/:id with { "plan": plan }.
+func (c *RAGClient) UpdatePlan(id int, plan string) error {
+	payload := map[string]string{"plan": plan}
+	req, err := c.newRequest(http.MethodPatch, fmt.Sprintf("/admin/sites/%d", id), payload)
 	if err != nil {
-		return Site{}, err
+		return err
 	}
-	var out Site
+	return c.do(req, nil)
+}
+
+// SetActive calls PATCH /admin/sites/:id with { "is_active": active }.
+func (c *RAGClient) SetActive(id int, active bool) error {
+	payload := map[string]bool{"is_active": active}
+	req, err := c.newRequest(http.MethodPatch, fmt.Sprintf("/admin/sites/%d", id), payload)
+	if err != nil {
+		return err
+	}
+	return c.do(req, nil)
+}
+
+// RegenerateKeyResp is the response body for POST /admin/sites/:id/regenerate-key.
+type RegenerateKeyResp struct {
+	SiteID int    `json:"site_id"`
+	APIKey string `json:"api_key"`
+}
+
+// RegenerateKey calls POST /admin/sites/:id/regenerate-key.
+func (c *RAGClient) RegenerateKey(id int) (RegenerateKeyResp, error) {
+	req, err := c.newRequest(http.MethodPost, fmt.Sprintf("/admin/sites/%d/regenerate-key", id), nil)
+	if err != nil {
+		return RegenerateKeyResp{}, err
+	}
+	var out RegenerateKeyResp
 	return out, c.do(req, &out)
 }
 
-// UpdatePlan calls PATCH /admin/sites/:id/plan.
-func (c *RAGClient) UpdatePlan(id int, plan string) error {
-	payload := map[string]string{"plan": plan}
-	req, err := c.newRequest(http.MethodPatch, fmt.Sprintf("/admin/sites/%d/plan", id), payload)
-	if err != nil {
-		return err
-	}
-	return c.do(req, nil)
+// ResetSiteResp is the response body for POST /admin/sites/:id/reset.
+type ResetSiteResp struct {
+	SiteID  int      `json:"site_id"`
+	Cleared []string `json:"cleared"`
 }
 
-// DeactivateSite calls PATCH /admin/sites/:id/deactivate.
-func (c *RAGClient) DeactivateSite(id int) error {
-	req, err := c.newRequest(http.MethodPatch, fmt.Sprintf("/admin/sites/%d/deactivate", id), nil)
+// ResetSite calls POST /admin/sites/:id/reset.
+func (c *RAGClient) ResetSite(id int, messages, files bool) (ResetSiteResp, error) {
+	payload := map[string]bool{"messages": messages, "files": files}
+	req, err := c.newRequest(http.MethodPost, fmt.Sprintf("/admin/sites/%d/reset", id), payload)
 	if err != nil {
-		return err
+		return ResetSiteResp{}, err
 	}
-	return c.do(req, nil)
-}
-
-// ReactivateSite calls PATCH /admin/sites/:id/reactivate.
-func (c *RAGClient) ReactivateSite(id int) error {
-	req, err := c.newRequest(http.MethodPatch, fmt.Sprintf("/admin/sites/%d/reactivate", id), nil)
-	if err != nil {
-		return err
-	}
-	return c.do(req, nil)
+	var out ResetSiteResp
+	return out, c.do(req, &out)
 }
 
 // GetJobStatus calls GET /ingest/status/:job_id.
