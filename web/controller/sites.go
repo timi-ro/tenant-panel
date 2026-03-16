@@ -110,6 +110,38 @@ func SetActive(c *gin.Context) {
 	success(c, gin.H{"is_active": body.IsActive})
 }
 
+// SetLLM proxies PATCH /panel/api/sites/:id/llm → PATCH /admin/sites/:id/llm.
+func SetLLM(c *gin.Context) {
+	client := ragClient(c)
+	if client == nil {
+		fail(c, "rag client not available")
+		return
+	}
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		fail(c, "invalid site id")
+		return
+	}
+
+	var body struct {
+		Provider string `json:"provider" binding:"required"`
+		Model    string `json:"model"`
+		APIKey   string `json:"api_key" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		fail(c, "provider and api_key are required")
+		return
+	}
+
+	if err := client.SetLLM(id, body.Provider, body.Model, body.APIKey); err != nil {
+		fail(c, err.Error())
+		return
+	}
+
+	success(c, gin.H{"updated": true})
+}
+
 // ResetSite proxies POST /panel/api/sites/:id/reset → POST /admin/sites/:id/reset.
 func ResetSite(c *gin.Context) {
 	client := ragClient(c)

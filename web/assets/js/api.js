@@ -48,6 +48,9 @@
     setActive(id, isActive) {
       return http.post(`/sites/${id}/active`, { is_active: isActive }).then(r => r.obj);
     },
+    setLLM(id, provider, model, apiKey) {
+      return http.patch(`/sites/${id}/llm`, { provider, model, api_key: apiKey }).then(r => r.obj);
+    },
     resetSite(id, messages, files) {
       return http.post(`/sites/${id}/reset`, { messages, files }).then(r => r.obj);
     },

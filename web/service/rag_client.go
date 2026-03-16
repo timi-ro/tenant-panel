@@ -46,6 +46,9 @@ type Site struct {
 	TotalRequests int    `json:"total_requests"`
 	CreatedAt     string `json:"created_at"`
 	APIKey        string `json:"api_key,omitempty"`
+	LLMProvider   string `json:"llm_provider,omitempty"`
+	LLMModel      string `json:"llm_model,omitempty"`
+	LLMAPIKey     string `json:"llm_api_key,omitempty"`
 }
 
 // CreateSiteResp is the response body for POST /admin/sites.
@@ -190,6 +193,22 @@ func (c *RAGClient) RegenerateKey(id int) (RegenerateKeyResp, error) {
 	}
 	var out RegenerateKeyResp
 	return out, c.do(req, &out)
+}
+
+// SetLLM calls PATCH /admin/sites/:id/llm.
+func (c *RAGClient) SetLLM(id int, provider, model, apiKey string) error {
+	payload := map[string]string{
+		"provider": provider,
+		"api_key":  apiKey,
+	}
+	if model != "" {
+		payload["model"] = model
+	}
+	req, err := c.newRequest(http.MethodPatch, fmt.Sprintf("/admin/sites/%d/llm", id), payload)
+	if err != nil {
+		return err
+	}
+	return c.do(req, nil)
 }
 
 // ResetSiteResp is the response body for POST /admin/sites/:id/reset.

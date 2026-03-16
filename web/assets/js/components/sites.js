@@ -103,6 +103,13 @@
                   @click="toggleApiKey(record)"
                 >Regen Key</a-button>
 
+                <!-- Configure LLM -->
+                <a-button
+                  size="small"
+                  icon="setting"
+                  @click="openLLMModal(record)"
+                >LLM</a-button>
+
                 <!-- Reset -->
                 <a-button
                   size="small"
@@ -144,6 +151,36 @@
             </div>
             <div v-else-if="!keyModal.loading" style="color:#8c8c8c;">No API key available.</div>
           </a-spin>
+        </a-modal>
+
+        <!-- LLM Config Modal -->
+        <a-modal
+          v-model="llmModal.visible"
+          :title="'LLM Config — ' + llmModal.siteName"
+          ok-text="Save"
+          :confirm-loading="llmModal.loading"
+          @ok="submitLLM"
+          @cancel="llmModal.visible = false"
+        >
+          <a-form :label-col="{ span: 7 }" :wrapper-col="{ span: 15 }">
+            <a-form-item label="Provider" required>
+              <a-select v-model="llmModal.provider" placeholder="Select provider">
+                <a-select-option value="openai">OpenAI</a-select-option>
+                <a-select-option value="gemini">Gemini</a-select-option>
+                <a-select-option value="anthropic">Anthropic</a-select-option>
+              </a-select>
+            </a-form-item>
+            <a-form-item label="Model">
+              <a-input v-model="llmModal.model" :placeholder="llmModelPlaceholder" allow-clear />
+            </a-form-item>
+            <a-form-item label="API Key" required>
+              <a-input-password v-model="llmModal.apiKey" placeholder="Paste API key" />
+            </a-form-item>
+          </a-form>
+          <div v-if="llmModal.currentProvider" style="margin-top:4px;padding:8px 12px;background:#f5f5f5;border-radius:4px;font-size:12px;color:#595959;">
+            Current provider: <strong>{{ llmModal.currentProvider }}</strong>
+            <span v-if="llmModal.currentModel"> · model: <strong>{{ llmModal.currentModel }}</strong></span>
+          </div>
         </a-modal>
 
         <!-- Reset Site Modal -->
@@ -203,6 +240,7 @@
         actionLoading: {},
         keyModal: { visible: false, siteName: '', apiKey: '', loading: false, siteId: null },
         resetModal: { visible: false, siteName: '', siteId: null, messages: false, files: false, loading: false },
+        llmModal: { visible: false, siteName: '', siteId: null, provider: undefined, model: '', apiKey: '', currentProvider: '', currentModel: '', loading: false },
         createForm: { name: '', plan: 'free' },
         columns: [
           { title: 'ID',       dataIndex: 'id',       key: 'id',      width: 55 },
@@ -218,6 +256,10 @@
     },
     computed: {
       activeSites() { return this.sites.filter(s => s.is_active).length; },
+      llmModelPlaceholder() {
+        const defaults = { openai: 'gpt-4o', gemini: 'gemini-1.5-pro', anthropic: 'claude-3-5-sonnet-20241022' };
+        return this.llmModal.provider ? ('default: ' + (defaults[this.llmModal.provider] || '')) : 'optional';
+      },
       filteredSites() {
         if (!this.search) return this.sites;
         const q = this.search.toLowerCase();
@@ -312,6 +354,34 @@
         navigator.clipboard.writeText(key).then(() => {
           this.$message.success('Copied to clipboard!');
         });
+      },
+      openLLMModal(record) {
+        this.llmModal = {
+          visible: true,
+          siteName: record.name,
+          siteId: record.id,
+          provider: record.llm_provider || undefined,
+          model: record.llm_model || '',
+          apiKey: '',
+          currentProvider: record.llm_provider || '',
+          currentModel: record.llm_model || '',
+          loading: false,
+        };
+      },
+      async submitLLM() {
+        if (!this.llmModal.provider) { this.$message.warning('Provider is required'); return; }
+        if (!this.llmModal.apiKey) { this.$message.warning('API key is required'); return; }
+        this.llmModal.loading = true;
+        try {
+          await window.PanelAPI.setLLM(this.llmModal.siteId, this.llmModal.provider, this.llmModal.model, this.llmModal.apiKey);
+          this.$message.success('LLM credentials saved');
+          this.llmModal.visible = false;
+          await this.fetchSites();
+        } catch (e) {
+          this.$message.error('Failed to save LLM config: ' + e.message);
+        } finally {
+          this.llmModal.loading = false;
+        }
       },
       openResetModal(record) {
         this.resetModal = { visible: true, siteName: record.name, siteId: record.id, messages: false, files: false, loading: false };

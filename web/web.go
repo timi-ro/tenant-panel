@@ -84,6 +84,7 @@ func Setup(
 		api.POST("/sites", controller.CreateSite)
 		api.POST("/sites/:id/plan", controller.UpdatePlan)
 		api.POST("/sites/:id/active", controller.SetActive)
+		api.PATCH("/sites/:id/llm", controller.SetLLM)
 		api.POST("/sites/:id/reset", controller.ResetSite)
 		api.POST("/sites/:id/regenerate-key", controller.RegenerateKey)
 
