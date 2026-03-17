@@ -7,7 +7,7 @@ A lightweight admin panel for managing my RAG API deployment. Built with Go (Gin
 ## Features
 
 - **Dashboard** — live site stats, server status, queue snapshot (auto-refreshes every 10s)
-- **Site Management** — view all sites, toggle active/inactive, change plan, create new sites
+- **Site Management** — view all sites, toggle active/inactive, change plan, create new sites, regenerate API keys, reset message logs or vector chunks, configure per-site LLM credentials
 - **Queue Monitor** — track upload jobs with live status polling every 5s, retry failed jobs
 
 ---
@@ -72,7 +72,7 @@ go run .
 ## Project Structure
 
 ```
-rag-admin-panel/
+tenant-panel/
 ├── main.go
 ├── config/config.go          # env var loading
 ├── database/db.go            # GORM init + session key persistence
@@ -96,14 +96,28 @@ rag-admin-panel/
 
 ## Panel API Routes
 
+### Server
+
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/panel/api/server/status` | RAG server health |
+
+### Sites
+
+| Method | Path | Description |
+|---|---|---|
 | `GET` | `/panel/api/sites` | List all sites |
-| `POST` | `/panel/api/sites` | Create a new site |
+| `POST` | `/panel/api/sites` | Create a new site (returns API key once) |
+| `POST` | `/panel/api/sites/:id/active` | Activate or deactivate — body: `{ "is_active": bool }` |
 | `POST` | `/panel/api/sites/:id/plan` | Update site plan |
-| `POST` | `/panel/api/sites/:id/deactivate` | Deactivate a site |
-| `POST` | `/panel/api/sites/:id/reactivate` | Reactivate a site |
+| `PATCH` | `/panel/api/sites/:id/llm` | Set per-site LLM provider, model, and API key |
+| `POST` | `/panel/api/sites/:id/regenerate-key` | Issue a new API key, invalidates the old one |
+| `POST` | `/panel/api/sites/:id/reset` | Clear message logs and/or vector chunks — body: `{ "messages": bool, "files": bool }` |
+
+### Queue
+
+| Method | Path | Description |
+|---|---|---|
 | `GET` | `/panel/api/queue` | Get tracked jobs with live status |
 | `POST` | `/panel/api/queue/:job_id/track` | Start tracking a job |
 | `POST` | `/panel/api/queue/:job_id/retry` | Retry a failed job |
