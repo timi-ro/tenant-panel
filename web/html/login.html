@@ -1,108 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="no-js" lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RAG Admin Panel — Login</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: #f0f2f5;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .card {
-      width: 360px;
-      background: #fff;
-      border-radius: 8px;
-      padding: 40px 36px 32px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-    }
-    .logo {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .logo h1 {
-      font-size: 22px;
-      font-weight: 700;
-      color: #1890ff;
-      margin: 0 0 6px;
-    }
-    .logo p {
-      color: #8c8c8c;
-      margin: 0;
-      font-size: 13px;
-    }
-    .error {
-      background: #fff2f0;
-      border: 1px solid #ffccc7;
-      color: #cf1322;
-      border-radius: 4px;
-      padding: 8px 12px;
-      font-size: 13px;
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      font-size: 14px;
-      color: #262626;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-    input[type="password"] {
-      width: 100%;
-      padding: 8px 12px;
-      font-size: 14px;
-      border: 1px solid #d9d9d9;
-      border-radius: 4px;
-      outline: none;
-      transition: border-color 0.2s;
-      margin-bottom: 20px;
-    }
-    input[type="password"]:focus {
-      border-color: #1890ff;
-      box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
-    }
-    button[type="submit"] {
-      width: 100%;
-      padding: 9px;
-      font-size: 15px;
-      font-weight: 600;
-      color: #fff;
-      background: #1890ff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button[type="submit"]:hover {
-      background: #40a9ff;
-    }
-  </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Tenant Panel &mdash; Login</title>
+
+    <!-- Bootstrap 3 -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- uAdmin CSS -->
+    <link rel="stylesheet" href="/assets/css/plugins.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
 </head>
-<body>
-  <div class="card">
-    <div class="logo">
-      <h1>RAG Admin Panel</h1>
-      <p>Sign in to manage your RAG deployment</p>
+<body class="login">
+    <!-- Login Container -->
+    <div id="login-container">
+        <div id="login-logo">
+            <h3 style="color:#333;font-weight:700;margin:0 0 4px;">Tenant Panel</h3>
+            <p style="color:#999;font-size:13px;margin:0;">Sign in to manage your deployment</p>
+        </div>
+
+        <!-- Error message -->
+        <div id="error-msg" class="alert alert-danger" style="display:none;margin-top:14px;">
+            <i class="fa fa-exclamation-triangle"></i> Invalid password. Please try again.
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" action="/login" method="POST" class="form-horizontal" style="display:block;padding-top:18px;">
+            <div class="form-group">
+                <div class="col-xs-12">
+                    <div class="input-group">
+                        <input type="password" id="password" name="password" placeholder="Password.." class="form-control" autofocus>
+                        <span class="input-group-addon"><i class="fa fa-lock fa-fw"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix">
+                <div class="btn-group btn-group-sm pull-right">
+                    <button type="submit" class="btn btn-success"><i class="fa fa-arrow-right"></i> Sign In</button>
+                </div>
+            </div>
+        </form>
+        <!-- END Login Form -->
     </div>
+    <!-- END Login Container -->
 
-    <div class="error" id="error-msg" style="display:none">Invalid password. Please try again.</div>
-
-    <form method="POST" action="/login">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" placeholder="Enter panel password" autofocus />
-      <button type="submit">Sign In</button>
-    </form>
-  </div>
-  <script>
-    if (new URLSearchParams(window.location.search).get('error') === '1') {
-      document.getElementById('error-msg').style.display = 'block';
-    }
-  </script>
+    <script>
+        if (new URLSearchParams(window.location.search).get('error') === '1') {
+            document.getElementById('error-msg').style.display = 'block';
+        }
+    </script>
 </body>
 </html>

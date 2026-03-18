@@ -3,11 +3,10 @@
  * Must be loaded AFTER api.js and all component scripts.
  */
 
-(function (Vue, VueRouter, antd) {
+(function (Vue, VueRouter) {
   'use strict';
 
   Vue.use(VueRouter);
-  Vue.use(antd);
 
   // ---------------------------------------------------------------------------
   // Routes
@@ -45,7 +44,7 @@
   });
 
   // ---------------------------------------------------------------------------
-  // Page title map
+  // Page title / icon map
   // ---------------------------------------------------------------------------
   const PAGE_TITLES = {
     dashboard: 'Dashboard',
@@ -53,20 +52,45 @@
     queue: 'Queue Monitor',
   };
 
+  const PAGE_ICONS = {
+    dashboard: 'fa fa-tachometer',
+    sites: 'fa fa-globe',
+    queue: 'fa fa-list-ol',
+  };
+
+  // ---------------------------------------------------------------------------
+  // Global toast notification helper
+  // ---------------------------------------------------------------------------
+  function showToast(type, text, duration) {
+    duration = duration || 3000;
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var el = document.createElement('div');
+    el.className = 'toast-msg ' + type;
+    el.textContent = text;
+    container.appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 400);
+    }, duration);
+  }
+
+  Vue.prototype.$showMessage = function (type, text) { showToast(type, text); };
+
   // ---------------------------------------------------------------------------
   // Root instance
   // ---------------------------------------------------------------------------
   new Vue({
     el: '#app',
     router,
-    data() {
-      return {
-        collapsed: false,
-      };
-    },
     computed: {
       pageTitle() {
-        return PAGE_TITLES[this.$route.name] || 'RAG Admin Panel';
+        return PAGE_TITLES[this.$route.name] || 'Tenant Panel';
+      },
+      pageIcon() {
+        return PAGE_ICONS[this.$route.name] || 'fa fa-home';
       },
     },
     methods: {
@@ -83,4 +107,4 @@
       },
     },
   });
-})(Vue, VueRouter, antd);
+})(Vue, VueRouter);
