@@ -217,8 +217,14 @@
           this.$showMessage('error', e.message);
         }
       },
-      removeJob(job) {
-        this.jobs = this.jobs.filter(j => j.job_id !== job.job_id);
+      async removeJob(job) {
+        try {
+          await window.PanelAPI.removeJob(job.job_id);
+          this.$showMessage('success', 'Job removed from tracking');
+          await this.fetchQueue();
+        } catch (e) {
+          this.$showMessage('error', 'Failed to remove job: ' + e.message);
+        }
       },
       async submitTrack() {
         if (!this.trackForm.jobId) {

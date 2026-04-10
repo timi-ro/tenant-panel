@@ -69,6 +69,9 @@
         filename: filename,
       }).then(r => r.obj);
     },
+    removeJob(jobId) {
+      return http.delete(`/queue/${jobId}`).then(r => r.obj);
+    },
     retryJob(jobId, apiKey) {
       return http.post(`/queue/${jobId}/retry`, { api_key: apiKey || '' }).then(r => r.obj);
     },

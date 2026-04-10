@@ -52,6 +52,28 @@ func TrackJob(c *gin.Context) {
 	success(c, gin.H{"tracked": true, "job_id": jobID})
 }
 
+// UntrackJob removes a job from the tracked_jobs table.
+func UntrackJob(c *gin.Context) {
+	tracker := jobTracker(c)
+	if tracker == nil {
+		fail(c, "job tracker not available")
+		return
+	}
+
+	jobID := c.Param("job_id")
+	if jobID == "" {
+		fail(c, "job_id is required")
+		return
+	}
+
+	if err := tracker.RemoveJob(jobID); err != nil {
+		fail(c, err.Error())
+		return
+	}
+
+	success(c, gin.H{"removed": true, "job_id": jobID})
+}
+
 // RetryJob proxies POST /panel/api/queue/:job_id/retry → POST /ingest/retry/:job_id.
 func RetryJob(c *gin.Context) {
 	client := ragClient(c)

@@ -90,6 +90,7 @@ func Setup(
 
 		api.GET("/queue", controller.GetQueue)
 		api.POST("/queue/:job_id/track", controller.TrackJob)
+		api.DELETE("/queue/:job_id", controller.UntrackJob)
 		api.POST("/queue/:job_id/retry", controller.RetryJob)
 	}
 
