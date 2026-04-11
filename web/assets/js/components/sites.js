@@ -12,10 +12,18 @@
           <div class="stat-item">Total Sites: <span class="stat-value" style="margin-left:4px;">{{ sites.length }}</span></div>
           <div class="stat-item">Active: <span class="stat-badge green" style="margin-left:4px;">{{ activeSites }}</span></div>
           <div class="stat-item">Inactive: <span class="stat-badge" style="margin-left:4px;">{{ sites.length - activeSites }}</span></div>
-          <div class="stat-item">Free: <span class="stat-badge" style="margin-left:4px;">{{ countPlan('free') }}</span></div>
-          <div class="stat-item">Pro: <span class="stat-badge blue" style="margin-left:4px;">{{ countPlan('pro') }}</span></div>
-          <div class="stat-item">Gold: <span class="stat-badge orange" style="margin-left:4px;">{{ countPlan('gold') }}</span></div>
-          <div class="stat-item">Enterprise: <span class="stat-badge purple" style="margin-left:4px;">{{ countPlan('enterprise') }}</span></div>
+          <div class="stat-item" style="cursor:pointer;" @click="togglePlanFilter('free')" :title="planFilter === 'free' ? 'Clear filter' : 'Filter by Free'">
+            Free: <span class="stat-badge" style="margin-left:4px;" :style="planFilter === 'free' ? 'outline:2px solid #595959;' : ''">{{ countPlan('free') }}</span>
+          </div>
+          <div class="stat-item" style="cursor:pointer;" @click="togglePlanFilter('pro')" :title="planFilter === 'pro' ? 'Clear filter' : 'Filter by Pro'">
+            Pro: <span class="stat-badge blue" style="margin-left:4px;" :style="planFilter === 'pro' ? 'outline:2px solid #1890ff;' : ''">{{ countPlan('pro') }}</span>
+          </div>
+          <div class="stat-item" style="cursor:pointer;" @click="togglePlanFilter('gold')" :title="planFilter === 'gold' ? 'Clear filter' : 'Filter by Gold'">
+            Gold: <span class="stat-badge orange" style="margin-left:4px;" :style="planFilter === 'gold' ? 'outline:2px solid #d48806;' : ''">{{ countPlan('gold') }}</span>
+          </div>
+          <div class="stat-item" style="cursor:pointer;" @click="togglePlanFilter('enterprise')" :title="planFilter === 'enterprise' ? 'Clear filter' : 'Filter by Enterprise'">
+            Enterprise: <span class="stat-badge purple" style="margin-left:4px;" :style="planFilter === 'enterprise' ? 'outline:2px solid #722ed1;' : ''">{{ countPlan('enterprise') }}</span>
+          </div>
         </div>
 
         <!-- New API key alert (one-time after create) -->
@@ -362,6 +370,7 @@
         pageSize: 15,
         creating: false,
         newApiKey: null,
+        planFilter: null,
         actionLoading: {},
         pendingRegenSite: null,
         keyModal:   { visible: false, siteName: '', apiKey: '', loading: false, siteId: null },
@@ -377,9 +386,11 @@
         return this.llmModal.provider ? ('default: ' + (defaults[this.llmModal.provider] || '')) : 'optional';
       },
       filteredSites() {
-        if (!this.search) return this.sites;
+        let list = this.sites;
+        if (this.planFilter) list = list.filter(s => s.plan === this.planFilter);
+        if (!this.search) return list;
         const q = this.search.toLowerCase();
-        return this.sites.filter(s => s.name.toLowerCase().includes(q) || String(s.id).includes(q));
+        return list.filter(s => s.name.toLowerCase().includes(q) || String(s.id).includes(q));
       },
       totalPages() {
         return Math.max(1, Math.ceil(this.filteredSites.length / this.pageSize));
@@ -390,10 +401,14 @@
       },
     },
     watch: {
-      search() { this.currentPage = 1; },
+      search()     { this.currentPage = 1; },
+      planFilter() { this.currentPage = 1; },
     },
     methods: {
       countPlan(p) { return this.sites.filter(s => s.plan === p).length; },
+      togglePlanFilter(plan) {
+        this.planFilter = this.planFilter === plan ? null : plan;
+      },
       usagePct(r) {
         if (!r.message_limit) return 0;
         return Math.round((r.total_requests / r.message_limit) * 100);
