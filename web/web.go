@@ -35,6 +35,7 @@ func Setup(
 	ragClient *service.RAGClient,
 	jobTracker *service.JobTracker,
 	sessionStore sessions.Store,
+	panelSecret string,
 ) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
@@ -46,6 +47,7 @@ func Setup(
 	r.Use(func(c *gin.Context) {
 		c.Set("rag_client", ragClient)
 		c.Set("job_tracker", jobTracker)
+		c.Set("panel_secret", panelSecret)
 		c.Next()
 	})
 

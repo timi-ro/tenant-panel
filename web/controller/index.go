@@ -2,7 +2,6 @@ package controller
 
 import (
 	"net/http"
-	"os"
 	"rag-admin-panel/web/session"
 
 	"github.com/gin-gonic/gin"
@@ -26,10 +25,7 @@ func LoginPage(c *gin.Context) {
 // Login handles POST /login. It validates PANEL_SECRET and creates a session.
 func Login(c *gin.Context) {
 	password := c.PostForm("password")
-	panelSecret := os.Getenv("PANEL_SECRET")
-	if panelSecret == "" {
-		panelSecret = "admin"
-	}
+	panelSecret, _ := c.MustGet("panel_secret").(string)
 
 	if password != panelSecret {
 		c.Redirect(http.StatusFound, "/login?error=1")

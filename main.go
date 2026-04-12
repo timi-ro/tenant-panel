@@ -31,7 +31,7 @@ func main() {
 	sessionStore := session.NewStore(sessionKey)
 
 	// --- HTTP server ---
-	router := web.Setup(ragClient, jobTracker, sessionStore)
+	router := web.Setup(ragClient, jobTracker, sessionStore, cfg.PanelSecret)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	logger.Info.Printf("RAG Admin Panel starting on %s", addr)
